@@ -4,6 +4,7 @@ import {Component, OnInit} from '@angular/core';
 import {interval, noop, Observable, of, throwError, timer} from 'rxjs';
 import {catchError, delayWhen, finalize, map, retryWhen, share, shareReplay, tap} from 'rxjs/operators';
 import { cerateHttpObservable } from '../common/util';
+import { Store } from '../common/store.service';
 
 
 @Component({
@@ -17,23 +18,25 @@ export class HomeComponent implements OnInit {
     advancedCourses$ : Observable<Course[]>;
 
 
-    constructor() {
+    constructor(private store:Store) {
 
     }
 
     ngOnInit() {
 
-        const http$  = cerateHttpObservable('/api/courses');
-        
-        //retry
-        const courses$ : Observable<Course[]>= http$
-        .pipe(
+        const courses$ = this.store.courses$;
+        // //Latest without store
+        // const http$  = cerateHttpObservable('/api/courses');
+        // const courses$ : Observable<Course[]>= http$
+        // .pipe(
            
-            tap(()=> console.log('HTTP request executed')),
-            map(res => Object.values(res["payload"])as Course[]),
-            shareReplay(),
-            retryWhen(errors => errors.pipe(delayWhen(()=> timer(2000))))
-        );
+        //     tap(()=> console.log('HTTP request executed')),
+        //     map(res => Object.values(res["payload"])as Course[]),
+        //     shareReplay(),
+        //     retryWhen(errors => errors.pipe(delayWhen(()=> timer(2000))))
+        // );
+
+
         //error handling
         // const courses$ : Observable<Course[]>= http$
         // .pipe(
@@ -47,18 +50,24 @@ export class HomeComponent implements OnInit {
         //     shareReplay()
         // );
 
-        this.beginnersCourses$ = courses$
-        .pipe(
-            map(courses =>courses
-                .filter(course=> course.category =='BEGINNER')
-                )
-        );
-        this.advancedCourses$ = courses$
-        .pipe(
-            map(courses =>courses
-                .filter(course=> course.category =='ADVANCED')
-                )
-        );
+        this.beginnersCourses$ = this.store.selectBeginnerCourses();
+        this.advancedCourses$ = this.store.selectAdvancedCourses();
+       
+
+                
+       // //Latest without store
+        // this.beginnersCourses$ = courses$
+        // .pipe(
+        //     map(courses =>courses
+        //         .filter(course=> course.category =='BEGINNER')
+        //         )
+        // );
+        // this.advancedCourses$ = courses$
+        // .pipe(
+        //     map(courses =>courses
+        //         .filter(course=> course.category =='ADVANCED')
+        //         )
+        // );
 
         // courses$.subscribe(
         //     courses => {

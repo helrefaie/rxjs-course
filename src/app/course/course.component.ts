@@ -1,3 +1,4 @@
+import { Store } from './../common/store.service';
 import { RxJsLoggingLevel, setRxJsLoggingLevel } from './../common/debug';
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {ActivatedRoute} from "@angular/router";
@@ -12,7 +13,7 @@ import {
     concatMap,
     switchMap,
     withLatestFrom,
-    concatAll, shareReplay, concatMapTo, throttleTime
+    concatAll, shareReplay, concatMapTo, throttleTime, first
 } from 'rxjs/operators';
 import {merge, fromEvent, Observable, concat} from 'rxjs';
 import {Lesson} from '../model/lesson';
@@ -29,14 +30,15 @@ import { debug } from '../common/debug';
 })
 export class CourseComponent implements OnInit, AfterViewInit {
 
-    courseId: string;
+    courseId: number;
     course$: Observable<Course>;
     lessons$: Observable<Lesson[]>;
 
 
     @ViewChild('searchInput', { static: true }) input: ElementRef;
 
-    constructor(private route: ActivatedRoute) {
+    constructor(private route: ActivatedRoute,
+        private store:Store) {
 
 
     }
@@ -44,8 +46,11 @@ export class CourseComponent implements OnInit, AfterViewInit {
     ngOnInit() {
 
         this.courseId = this.route.snapshot.params['id'];
-
-        this.course$=cerateHttpObservable('api/courses/'+this.courseId);
+        this.course$ = this.store.selectCourseById(this.courseId);
+        // .pipe(
+        //     first()
+        // );
+        //this.course$=cerateHttpObservable('api/courses/'+this.courseId);
         // .pipe(
         //     debug (RxJsLoggingLevel.INFO, "cousrse Value ")
         //     // tap(course => console.log ("course" , course))

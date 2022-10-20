@@ -9,6 +9,7 @@ import { concatMap, distinctUntilChanged, exhaustMap, filter, mergeMap } from 'r
 import { fromPromise } from 'rxjs/internal-compatibility';
 import { ThisReceiver } from '@angular/compiler';
 import { JsonFormatter } from 'tslint/lib/formatters';
+import { Store } from '../common/store.service';
 
 @Component({
     selector: 'course-dialog',
@@ -27,14 +28,15 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
     constructor(
         private fb: FormBuilder,
         private dialogRef: MatDialogRef<CourseDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) course: Course) {
+        @Inject(MAT_DIALOG_DATA) course: Course,
+        private strore: Store) {
 
         this.course = course;
 
         this.form = fb.group({
             description: [course.description, Validators.required],
             category: [course.category, Validators.required],
-            releasedAt: [moment(), Validators.required],
+            releasedAt: [course.releasedAt, Validators.required],
             longDescription: [course.longDescription, Validators.required]
         });
 
@@ -60,16 +62,16 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
         //     .subscribe();
     }
 
-    saveCourses(changes: any) :Observable<Response>
-    {
-        return fromPromise(fetch('api/courses/'+this.course.id,
-                    {
-                        method: 'PUT', body: JSON.stringify(changes),
-                        headers: {
-                            'content-type': 'application/json'
-                        }
-                    }));
-    }
+    // saveCourses(changes: any) :Observable<Response>
+    // {
+    //     return fromPromise(fetch('api/courses/'+this.course.id,
+    //                 {
+    //                     method: 'PUT', body: JSON.stringify(changes),
+    //                     headers: {
+    //                         'content-type': 'application/json'
+    //                     }
+    //                 }));
+    // }
 
     // ngOnInit() {
 
@@ -98,11 +100,20 @@ export class CourseDialogComponent implements OnInit, AfterViewInit {
 
 
     ngAfterViewInit() {
-        fromEvent(this.saveButton.nativeElement,'click')
-        .pipe(
-            exhaustMap(()=> this.saveCourses(this.form.value))
-        ).subscribe();
+        // fromEvent(this.saveButton.nativeElement,'click')
+        // .pipe(
+        //     exhaustMap(()=> this.saveCourses(this.form.value))
+        // ).subscribe();
 
+    }
+    save(){
+        this.strore.saveCourse(this.course.id,this.form.value)
+        .subscribe(
+            () => this.close(),
+            err =>console.log("Error saving course" , err)
+        );
+        
+    
     }
 
 
